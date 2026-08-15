@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.*
+
+# 本地调试脚本
+正向WebSocket/Node.js/auto_approve_group_invite.js
+正向WebSocket/Node.js/print_ark.js
+正向WebSocket/Node.js/test_grab.js
