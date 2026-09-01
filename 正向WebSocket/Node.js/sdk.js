@@ -15,36 +15,37 @@ const EVENTS = ['group_message', 'friend_message', 'group_notice', 'friend_notic
 const apiDefs = {
   get_skey: {
     wait: true,
-    build: (self_id) => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   get_user_agent: {
     wait: true,
-    build: (self_id) => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   get_clientkey: {
     wait: true,
-    build: (self_id) => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   send_group_msg: {
     wait: true,
-    build: (self_id, group_id, message) => ({ self_id, group_id, message }),
+    build: (self_id, platform, group_id, message) => ({ self_id, platform, group_id, message }),
   },
   send_friend_msg: {
     wait: true,
-    build: (self_id, user_id, message) => ({ self_id, user_id, message }),
+    build: (self_id, platform, user_id, message) => ({ self_id, platform, user_id, message }),
   },
   get_friend_list: {
     wait: true,
-    build: (self_id) => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   get_qzone_friend_feeds: {
     wait: true,
-    build: (self_id) => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   publish_qzone_feed: {
     wait: true,
-    build: (self_id, content, visibility = 1, self_delete_after_one_day = false, declare_ai_generated = false) => ({
+    build: (self_id, platform, content, visibility = 1, self_delete_after_one_day = false, declare_ai_generated = false) => ({
       self_id,
+      platform,
       content,
       visibility,
       self_delete_after_one_day,
@@ -53,36 +54,36 @@ const apiDefs = {
   },
   like_qzone_feed: {
     wait: false,
-    build: (self_id, feed) => ({ self_id, feed }),
+    build: (self_id, platform, feed) => ({ self_id, platform, feed }),
   },
   unlike_qzone_feed: {
     wait: false,
-    build: (self_id, feed) => ({ self_id, feed }),
+    build: (self_id, platform, feed) => ({ self_id, platform, feed }),
   },
   get_group_list: {
     wait: true,
-    build: (self_id) => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   get_group_member_list: {
     wait: true,
-    build: (self_id, group_id) => ({ self_id, group_id }),
+    build: (self_id, platform, group_id) => ({ self_id, platform, group_id }),
   },
   get_group_system_notifications: {
     wait: true,
-    build: (self_id) => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   approve_group_apply: {
     wait: true,
-    build: (self_id, group_id, request_id, request_type, request_extra) => {
-      const p = { self_id, group_id, request_id, request_type }
+    build: (self_id, platform, group_id, request_id, request_type, request_extra) => {
+      const p = { self_id, platform, group_id, request_id, request_type }
       if (request_extra !== undefined) p.request_extra = request_extra
       return p
     },
   },
   reject_group_apply: {
     wait: true,
-    build: (self_id, group_id, request_id, request_type, reason, request_extra) => {
-      const p = { self_id, group_id, request_id, request_type }
+    build: (self_id, platform, group_id, request_id, request_type, reason, request_extra) => {
+      const p = { self_id, platform, group_id, request_id, request_type }
       if (reason !== undefined) p.reason = reason
       if (request_extra !== undefined) p.request_extra = request_extra
       return p
@@ -90,18 +91,19 @@ const apiDefs = {
   },
   approve_group_invite: {
     wait: true,
-    build: (self_id, group_id, msgseq) => ({ self_id, group_id, msgseq }),
+    build: (self_id, platform, group_id, msgseq) => ({ self_id, platform, group_id, msgseq }),
   },
   get_pskey: {
     wait: true,
-    build: (self_id, domain) => ({ self_id, domain }),
+    build: (self_id, platform, domain) => ({ self_id, platform, domain }),
   },
   get_red_packet_info: {
     wait: true,
     timeout: 60 * 1000,
-    build: (self_id, group_id, sender_uin, red_packet) => ({
+    build: (self_id, platform, group_id, sender_uin, red_packet) => ({
       ...red_packet,
       self_id,
+      platform,
       group_id,
       sender_uin,
     }),
@@ -109,60 +111,66 @@ const apiDefs = {
   grab_red_packet: {
     wait: true,
     timeout: 60 * 1000,
-    build: (self_id, group_id, sender_uin, red_packet, pre_grap_token) => ({
-      ...red_packet,
-      self_id,
-      group_id,
-      sender_uin,
-      pre_grap_token,
-    }),
+    build: (self_id, platform, group_id, sender_uin, red_packet, pre_grap_token) => {
+      const params = {
+        ...red_packet,
+        self_id,
+        platform,
+        group_id,
+        sender_uin,
+      }
+      if (pre_grap_token !== undefined && pre_grap_token !== '') {
+        params.pre_grap_token = pre_grap_token
+      }
+      return params
+    },
   },
   get_group_red_packets: {
     wait: true,
     timeout: 60 * 1000,
-    build: (self_id, group_id) => ({ self_id, group_id }),
+    build: (self_id, platform, group_id) => ({ self_id, platform, group_id }),
   },
   get_up_for_grabs: {
     wait: true,
     timeout: 60 * 1000,
-    build: (self_id, group_id) => ({ self_id, group_id }),
+    build: (self_id, platform, group_id) => ({ self_id, platform, group_id }),
   },
   set_qq_avatar: {
     wait: true,
     timeout: 60 * 1000,
-    build: (self_id, file_path) => ({ self_id, file_path }),
+    build: (self_id, platform, file_path) => ({ self_id, platform, file_path }),
   },
   upload_group_image: {
     wait: true,
     timeout: 60 * 1000,
-    build: (self_id, group_id, file_path) => ({ self_id, group_id, file_path }),
+    build: (self_id, platform, group_id, file_path) => ({ self_id, platform, group_id, file_path }),
   },
   upload_friend_image: {
     wait: true,
     timeout: 60 * 1000,
-    build: (self_id, user_id, file_path) => ({ self_id, user_id, file_path }),
+    build: (self_id, platform, user_id, file_path) => ({ self_id, platform, user_id, file_path }),
   },
   upload_group_voice: {
     wait: true,
     timeout: 5 * 60 * 1000,
-    build: (self_id, group_id, file_path) => ({ self_id, group_id, file_path }),
+    build: (self_id, platform, group_id, file_path) => ({ self_id, platform, group_id, file_path }),
   },
   upload_group_video: {
     wait: true,
     timeout: 5 * 60 * 1000,
-    build: (self_id, group_id, file_path) => ({ self_id, group_id, file_path }),
+    build: (self_id, platform, group_id, file_path) => ({ self_id, platform, group_id, file_path }),
   },
   get_summary_card: {
     wait: true,
-    build: (self_id, target_uin) => {
-      const p = { self_id }
+    build: (self_id, platform, target_uin) => {
+      const p = { self_id, platform }
       if (target_uin !== undefined) p.target_uin = target_uin
       return p
     },
   },
   like_summary_card: {
     wait: true,
-    build: (self_id, target_uin, like_count = 1) => ({ self_id, target_uin, like_count }),
+    build: (self_id, platform, target_uin, like_count = 1) => ({ self_id, platform, target_uin, like_count }),
   },
   get_bot_list: {
     wait: true,
@@ -170,7 +178,7 @@ const apiDefs = {
   },
   get_bot_info: {
     wait: true,
-    build: self_id => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   get_protocol_list: {
     wait: true,
@@ -184,120 +192,126 @@ const apiDefs = {
     wait: true,
     resultMessage: '账号添加成功',
     resultData: false,
-    build: (self_id, password, protocol_id, device_profile_id) => ({ self_id, password, protocol_id, device_profile_id }),
+    build: (self_id, platform, password, protocol_id, device_profile_id) => ({ self_id, platform, password, protocol_id, device_profile_id }),
   },
   update_account: {
     wait: true,
     resultMessage: '账号编辑成功',
     resultData: false,
-    build: (self_id, password, protocol_id, device_profile_id) => ({ self_id, password, protocol_id, device_profile_id }),
+    build: (self_id, platform, password, protocol_id, device_profile_id) => ({ self_id, platform, password, protocol_id, device_profile_id }),
   },
   offline_account: {
     wait: true,
     resultMessage: '账号已离线',
     resultData: false,
-    build: self_id => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   delete_account: {
     wait: true,
     resultMessage: '账号删除成功',
     resultData: false,
-    build: self_id => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   login_account: {
     wait: true,
-    build: self_id => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   check_cache: {
     wait: true,
-    build: self_id => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   cache_login: {
     wait: true,
-    build: self_id => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   submit_slider: {
     wait: true,
-    build: (self_id, ticket, randstr) => ({ self_id, ticket, randstr }),
+    build: (self_id, platform, ticket, randstr) => ({ self_id, platform, ticket, randstr }),
   },
   get_security_verify_methods: {
     wait: true,
-    build: self_id => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   get_sms: {
     wait: true,
-    build: (self_id, verify_type, sign) => ({ self_id, verify_type, sign }),
+    build: (self_id, platform, verify_type, sign) => ({ self_id, platform, verify_type, sign }),
   },
   check_sms: {
     wait: true,
-    build: (self_id, verify_type, sign, code) => ({ self_id, verify_type, sign, code }),
+    build: (self_id, platform, verify_type, sign, code) => ({ self_id, platform, verify_type, sign, code }),
   },
-  create_login_qr: {
+  get_security_verify_qr: {
     wait: true,
-    build: self_id => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
-  query_login_qr_status: {
+  query_security_verify_qr: {
     wait: true,
-    build: (self_id, guarantee_token) => ({ self_id, guarantee_token }),
+    build: (self_id, platform, guarantee_token) => ({ self_id, platform, guarantee_token }),
+  },
+  get_login_qr: {
+    wait: true,
+    build: (self_id, platform, protocol_id, device_profile_id) => ({ self_id, platform, protocol_id, device_profile_id }),
+  },
+  query_login_qr: {
+    wait: true,
+    build: (self_id, platform) => ({ self_id, platform }),
+  },
+  scan_qr: {
+    wait: true,
+    build: (self_id, platform, k) => ({ self_id, platform, k }),
+  },
+  auth_qr: {
+    wait: true,
+    build: (self_id, platform, k, skip_phone_confirm = false) => ({ self_id, platform, k, skip_phone_confirm }),
   },
   set_group_admin: {
     wait: true,
-    build: (self_id, group_id, target_uin, set_admin) => ({ self_id, group_id, target_uin, set_admin }),
+    build: (self_id, platform, group_id, target_uin, set_admin) => ({ self_id, platform, group_id, target_uin, set_admin }),
   },
   group_sign: {
     wait: true,
-    build: (self_id, group_id) => ({ self_id, group_id }),
+    build: (self_id, platform, group_id) => ({ self_id, platform, group_id }),
   },
   set_group_mute: {
     wait: true,
-    build: (self_id, group_id, target_uin, duration_sec) => ({ self_id, group_id, target_uin, duration_sec }),
+    build: (self_id, platform, group_id, target_uin, duration_sec) => ({ self_id, platform, group_id, target_uin, duration_sec }),
   },
   set_group_mute_all: {
     wait: true,
-    build: (self_id, group_id, mute) => ({ self_id, group_id, mute }),
+    build: (self_id, platform, group_id, mute) => ({ self_id, platform, group_id, mute }),
   },
   set_group_special_title: {
     wait: true,
-    build: (self_id, group_id, user_id, title) => ({ self_id, group_id, user_id, title }),
+    build: (self_id, platform, group_id, user_id, title) => ({ self_id, platform, group_id, user_id, title }),
   },
   kick_group_member: {
     wait: true,
-    build: (self_id, group_id, user_id, reject_add_request) => ({ self_id, group_id, user_id, reject_add_request }),
+    build: (self_id, platform, group_id, user_id, reject_add_request) => ({ self_id, platform, group_id, user_id, reject_add_request }),
   },
   recall_group_msg: {
     wait: true,
-    build: (self_id, group_id, msg_seq, msg_random) => ({ self_id, group_id, msg_seq, msg_random }),
+    build: (self_id, platform, group_id, msg_seq, msg_random) => ({ self_id, platform, group_id, msg_seq, msg_random }),
   },
   get_group_forward_msg: {
     wait: true,
-    build: (self_id, sender_uin, res_id) => ({ self_id, sender_uin, res_id }),
+    build: (self_id, platform, sender_uin, res_id) => ({ self_id, platform, sender_uin, res_id }),
   },
   send_group_forward_msg: {
     wait: true,
-    build: (self_id, group_id, messages) => ({ self_id, group_id, messages }),
+    build: (self_id, platform, group_id, messages) => ({ self_id, platform, group_id, messages }),
   },
   delete_friend: {
     wait: true,
-    build: (self_id, target_uin) => ({ self_id, target_uin }),
+    build: (self_id, platform, target_uin) => ({ self_id, platform, target_uin }),
   },
   get_level_tasks: {
     wait: true,
-    build: (self_id) => ({ self_id }),
+    build: (self_id, platform) => ({ self_id, platform }),
   },
   execute_level_tasks: {
     wait: true,
     timeout: 5 * 60 * 1000,
-    build: (self_id, tasks) => ({ self_id, tasks }),
-  },
-  register_captcha_proxy: {
-    wait: true,
-    timeout: 30 * 1000,
-    build: (self_id, url, proxy_base = '') => ({ self_id, url, proxy_base }),
-  },
-  captcha_proxy: {
-    wait: true,
-    timeout: 30 * 1000,
-    build: (self_id, url, method = 'GET', headers = {}, body = '') => ({ self_id, url, method, headers, body }),
+    build: (self_id, platform, tasks) => ({ self_id, platform, tasks }),
   },
 }
 
