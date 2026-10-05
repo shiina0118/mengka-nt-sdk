@@ -125,6 +125,19 @@ const apiDefs = {
       return params
     },
   },
+  // Claim a group voice packet using the successful voice match result.
+  grab_group_voice_red_packet: {
+    wait: true,
+    timeout: 60 * 1000,
+    build: (self_id, platform, group_id, sender_uin, red_packet, voice_rate_id) => ({
+      ...red_packet,
+      self_id,
+      platform,
+      group_id,
+      sender_uin,
+      voice_rate_id,
+    }),
+  },
   get_group_red_packets: {
     wait: true,
     timeout: 60 * 1000,
@@ -154,6 +167,18 @@ const apiDefs = {
     wait: true,
     timeout: 5 * 60 * 1000,
     build: (self_id, platform, group_id, file_path) => ({ self_id, platform, group_id, file_path }),
+  },
+  // Upload wallet voice for matching; returns status/degree/voice_rate_id/matched.
+  upload_red_packet_voice: {
+    wait: true,
+    timeout: 5 * 60 * 1000,
+    build: (self_id, platform, sender_uin, red_packet, file_path) => ({
+      ...red_packet,
+      self_id,
+      platform,
+      sender_uin,
+      file_path,
+    }),
   },
   upload_group_video: {
     wait: true,
@@ -227,6 +252,18 @@ const apiDefs = {
   submit_slider: {
     wait: true,
     build: (self_id, platform, ticket, randstr) => ({ self_id, platform, ticket, randstr }),
+  },
+  submit_identity_captcha: {
+    wait: true,
+    build: (self_id, platform, ticket, randstr) => ({ self_id, platform, ticket, randstr }),
+  },
+  submit_identity_phone: {
+    wait: true,
+    build: (self_id, platform, mobile, area_code) => ({ self_id, platform, mobile, area_code }),
+  },
+  confirm_identity_sms: {
+    wait: true,
+    build: (self_id, platform, mobile, area_code) => ({ self_id, platform, mobile, area_code }),
   },
   get_security_verify_methods: {
     wait: true,
@@ -353,7 +390,7 @@ export function createAPI(config) {
       const id = String(++nextId)
       const timer = setTimeout(() => {
         pending.delete(id)
-        const error = `action ${action} 超时 (30s)`
+        const error = `action ${action} 超时 (${Math.ceil(timeoutMs / 1000)}s)`
         if (resultMessage) resolve({ code: 1, msg: error })
         else reject(new Error(error))
       }, timeoutMs)
