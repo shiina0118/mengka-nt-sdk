@@ -1,9 +1,13 @@
 import { createAPI } from './sdk.js'
 
+if (!process.env.MENGKA_SERVICE_TOKEN) {
+  throw new Error('请设置 MENGKA_SERVICE_TOKEN 环境变量')
+}
+
 const api = createAPI({
   host: '127.0.0.1',
   port: 3001,
-  token: '在管理后台填写服务令牌',
+  token: process.env.MENGKA_SERVICE_TOKEN,
   name: 'test',
   version: '1.0.0',
   author: 'test',
@@ -30,3 +34,12 @@ api.on('bot_offline', event => {
 })
 
 await api.connect()
+
+try {
+  const result = await api.get_client_key(106030, 'android')
+  console.log('[clientkey]', JSON.stringify(result))
+} catch (error) {
+  console.error('[clientkey] 获取失败:', error.message)
+} finally {
+  api.disconnect()
+}

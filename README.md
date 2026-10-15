@@ -32,7 +32,7 @@ npm install
 npm start
 ```
 
-运行前在 `index.js` 中填写管理后台配置的主机、端口和服务令牌。
+运行前在 `index.js` 中填写管理后台配置的主机和端口，并通过 `MENGKA_SERVICE_TOKEN` 环境变量提供服务令牌。
 
 ## 反向 WebSocket
 
@@ -44,13 +44,15 @@ npm install
 npm start
 ```
 
-运行前在 `index.js` 中填写服务令牌，并在萌卡NT管理后台配置对应的 WebSocket 地址。
+运行前通过 `MENGKA_SERVICE_TOKEN` 环境变量提供服务令牌，并在萌卡NT管理后台配置对应的 WebSocket 地址。
 
 ## API 与事件
 
 `sdk.js` 负责连接、事件分发和 API 调用封装。API 参数、返回值、消息段和事件结构请查看萌卡NT文档站。
 
 正向与反向 SDK 暴露相同的 API 和事件，仅连接方向与初始化方法不同。
+
+设置好友备注：`await api.set_friend_remark(self_id, platform, user_id, remark)`。`remark` 必须是字符串；传 `''` 清除备注，不可省略或传 `null`。
 
 ## 注意事项
 
@@ -66,38 +68,42 @@ npm start
 const result = await api.upload_red_packet_voice(
   self_id,
   platform,
-  sender_uin,
+  sender_id,
   red_packet, // 收到的 red_packet 消息段的 data，需包含 listid 和 title
   file_path,
 )
 ```
 
-`sender_uin` 是发红包人的 QQ 号。`file_path` 支持后端本地路径、`file://` 和后端可访问的 HTTP(S) 地址。已有 QQ Silk 文件直接上传，其他音频通过后端现有 FFmpeg 容器转成 Silk。SDK 等待超时为 5 分钟。
+`sender_id` 是发红包人的 QQ 号。`file_path` 支持后端本地路径、`file://`、后端可访问的 HTTP(S) 地址，以及 `base64://` / Base64 data URL。音频支持 MP3、WAV 和 QQ Silk。SDK 等待超时为 5 分钟。
 
-匹配成功返回 `{ status: 1, degree: '...', voice_rate_id: '...', matched: true }`。`voice_rate_id` 是服务端返回的 `degree` 原值。匹配未通过返回 `matched: false` 和原始 `status/degree`，`voice_rate_id` 为空；上传、转换或响应解析异常则抛出错误。
+完整 API 请求按 UTF-8 计算最多 4 MiB，SDK 会在发送前拒绝超限请求并保留连接。Base64 也计入上限，3 MiB 原始音频加上请求字段后就会超限；较大音频请使用文件地址。自定义客户端直接发送超限请求会导致连接关闭（关闭码 `1009`）。
+
+匹配成功返回 `{ status: 1, voice_rate_id: '...', matched: true }`。将 `voice_rate_id` 原样传给领取接口；匹配未通过时 `matched` 为 `false`，不能继续领取。调用失败时抛出错误。
 
 ## 群聊语音红包专用领取
 
 ```js
-const match = await api.upload_red_packet_voice(self_id, platform, sender_uin, red_packet, file_path)
+const match = await api.upload_red_packet_voice(self_id, platform, sender_id, red_packet, file_path)
 if (match.matched) {
   const voice = await api.upload_group_voice(self_id, platform, group_id, file_path)
   await api.send_group_msg(self_id, platform, group_id, [voice])
   const result = await api.grab_group_voice_red_packet(
-    self_id, platform, group_id, sender_uin, red_packet, match.voice_rate_id,
+    self_id, platform, group_id, sender_id, red_packet, match.voice_rate_id,
   )
   console.log(result)
 }
 ```
 
-`red_packet` 使用收到的红包消息段 `data`，需包含 `listid`、`authkey` 和 `channel: 65536`。`voice_rate_id` 必须使用该红包匹配成功返回的值。此接口不要求 `msg_random`、`msg_seq`、`msg_md5` 或 `pre_grap_token`；超时为 60 秒，返回原始领取结果，检查 `retcode` 判断是否成功。
+`red_packet` 使用收到的红包消息段 `data`，需包含 `listid`、`authkey` 和 `channel: 65536`。`voice_rate_id` 必须使用该红包匹配成功返回的值；超时为 60 秒，检查领取结果的 `retcode` 判断是否成功。
+
+`upload_group_voice` 返回的语音消息段需在 2 分钟内发送到上传时指定的群。图片和视频的发送标识也有 2 分钟使用期限，超时或萌卡NT重启后需重新上传。
 
 通用 `grab_red_packet` 遇到 `channel=65536` 时会抛出“群聊语音红包请使用 grab_group_voice_red_packet 专用 API 领取”。文字口令和其他红包仍按原接口调用。
 
 ### 实测
 
 1. 使用包含 `upload_red_packet_voice` 和 `grab_group_voice_red_packet` 的新版后端，重启后确认目标账号在线，正向 WebSocket 插件服务已启用，群消息事件可接收。
-2. 准备大于 0.5 秒的清晰录音，例如朗读“恭喜发财”。使用 WAV/MP3 时确认 FFmpeg 容器已运行；音频路径必须能由后端读取。
+2. 准备大于 0.5 秒的清晰录音，例如朗读“恭喜发财”。音频路径必须能由后端读取。
 3. 在 PowerShell 中运行：
 
 ```powershell
@@ -124,3 +130,46 @@ node .\red_packet_voice_test.js 'D:\voices\answer.wav'
 收到一个新红包后，脚本依次验证匹配通过、通用入口提示专用 API、向群内发送录音、调用专用领取 API。最终期望 `[领取结果]` 的 `retcode` 为 `0`。匹配失败时不会继续发送或领取。
 
 测试只上传匹配时设置 `$env:MENGKA_TEST_GRAB = '0'`。测试缺失证明的校验时，可调用专用 API 并传空 `voice_rate_id`，应得到“请先调用 upload_red_packet_voice 并确认 matched=true”，不会发起领取请求。
+
+## 返回字段约定
+
+正向与反向 SDK 直接返回后端业务数据。更新后端时需同步更新调用代码中的字段读取：
+
+- 好友、群成员、用户资料使用 `user_id`，当前账号及扫码登录结果使用 `self_id`。
+- 群人数上限使用 `max_member_count`，当前人数仍为 `member_count`。
+- 名片点赞总数使用 `like_count`，当前 Bot 已对目标用户点赞次数为 `sent_like_count`，仍可点赞次数为 `available_like_count`。
+- 名片其他字段使用下划线命名，例如 `group_name`、`group_nick`、`photo_count`、`status_text`；返回业务资料字段以 API 文档为准。
+- 群通知的 `presentation` 中，人员使用 `user_id`，群聊使用 `group_id`；被移出成员和标题字段为 `outed_member`、`nav_title`。
+
+不提供旧字段别名。
+
+## 用户资料与点赞
+
+正向与反向 SDK 均提供以下方法：
+
+```js
+const me = await api.get_user_profile(self_id, platform)
+const profile = await api.get_user_profile(self_id, platform, user_id)
+const result = await api.like_user_profile(self_id, platform, user_id, 1)
+const sent = await api.get_sent_profile_likes(self_id, platform)
+const received = await api.get_received_profile_likes(self_id, platform)
+
+if (sent.next_mid !== '-1') {
+  if (typeof sent.next_mid !== 'string' || !/^\d+$/.test(sent.next_mid)) {
+    throw new Error('分页游标无法安全使用')
+  }
+  const nextPage = await api.get_sent_profile_likes(self_id, platform, 30, sent.next_mid)
+}
+```
+
+两个列表方法的参数顺序为 `self_id, platform, page_size = 30, next_mid = '0'`，返回 `{ likes, next_mid }`。`likes` 中每项包含 `user_id`、`nickname`、`time`、`like_count`、`available_like_count`。`time` 使用 Unix 秒；`like_count` 按列表方向表示发出或收到的次数，`available_like_count` 始终表示当前 Bot 仍可对该用户点赞的次数。
+
+`page_size` 的自定义范围为 `1`～`53`，省略时为 `30`，超出范围或传 `null` 报错。`next_mid` 为非负十进制整数字符串，首次传 `"0"`；响应中 `"-1"` 表示结束，不要将游标转为 number。没有记录时 `likes` 为 `[]`。
+
+上述方法使用统一的新 API 名称，不提供旧名称别名。
+
+客户端配置使用 `get_client_profile_list()` 返回项目的 `id`，账号参数名为 `client_profile_id`。客户端列表只返回 `id`、`name`、`platform`、`version`，设备列表只返回 `id`、`name`。
+
+合并转发使用 `upload_group_forward_msg` 上传内容，再将结果中的 `message` 交给 `send_group_msg` 发送；群打卡使用 `sign_group`。凭据接口为 `get_client_key`、`get_ps_key`，分别返回 `client_key`、`ps_key`。
+
+红包请求保留嵌套 `red_packet` 对象，领取凭据参数为 `claim_token`。群邀请的消息序号参数为 `msg_seq`，群 @ 消息段使用 `{ type: 'at', data: { user_id: 123456789 } }`，@ 全体使用 `user_id: 'all'`。

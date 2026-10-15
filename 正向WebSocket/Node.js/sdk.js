@@ -21,7 +21,7 @@ const apiDefs = {
     wait: true,
     build: (self_id, platform) => ({ self_id, platform }),
   },
-  get_clientkey: {
+  get_client_key: {
     wait: true,
     build: (self_id, platform) => ({ self_id, platform }),
   },
@@ -36,6 +36,10 @@ const apiDefs = {
   get_friend_list: {
     wait: true,
     build: (self_id, platform) => ({ self_id, platform }),
+  },
+  set_friend_remark: {
+    wait: true,
+    build: (self_id, platform, user_id, remark) => ({ self_id, platform, user_id, remark }),
   },
   get_qzone_friend_feeds: {
     wait: true,
@@ -91,36 +95,36 @@ const apiDefs = {
   },
   approve_group_invite: {
     wait: true,
-    build: (self_id, platform, group_id, msgseq) => ({ self_id, platform, group_id, msgseq }),
+    build: (self_id, platform, group_id, msg_seq) => ({ self_id, platform, group_id, msg_seq }),
   },
-  get_pskey: {
+  get_ps_key: {
     wait: true,
     build: (self_id, platform, domain) => ({ self_id, platform, domain }),
   },
   get_red_packet_info: {
     wait: true,
     timeout: 60 * 1000,
-    build: (self_id, platform, group_id, sender_uin, red_packet) => ({
-      ...red_packet,
+    build: (self_id, platform, group_id, sender_id, red_packet) => ({
+      red_packet,
       self_id,
       platform,
       group_id,
-      sender_uin,
+      sender_id,
     }),
   },
   grab_red_packet: {
     wait: true,
     timeout: 60 * 1000,
-    build: (self_id, platform, group_id, sender_uin, red_packet, pre_grap_token) => {
+    build: (self_id, platform, group_id, sender_id, red_packet, claim_token) => {
       const params = {
-        ...red_packet,
+        red_packet,
         self_id,
         platform,
         group_id,
-        sender_uin,
+        sender_id,
       }
-      if (pre_grap_token !== undefined && pre_grap_token !== '') {
-        params.pre_grap_token = pre_grap_token
+      if (claim_token !== undefined && claim_token !== '') {
+        params.claim_token = claim_token
       }
       return params
     },
@@ -129,21 +133,16 @@ const apiDefs = {
   grab_group_voice_red_packet: {
     wait: true,
     timeout: 60 * 1000,
-    build: (self_id, platform, group_id, sender_uin, red_packet, voice_rate_id) => ({
-      ...red_packet,
+    build: (self_id, platform, group_id, sender_id, red_packet, voice_rate_id) => ({
+      red_packet,
       self_id,
       platform,
       group_id,
-      sender_uin,
+      sender_id,
       voice_rate_id,
     }),
   },
   get_group_red_packets: {
-    wait: true,
-    timeout: 60 * 1000,
-    build: (self_id, platform, group_id) => ({ self_id, platform, group_id }),
-  },
-  get_up_for_grabs: {
     wait: true,
     timeout: 60 * 1000,
     build: (self_id, platform, group_id) => ({ self_id, platform, group_id }),
@@ -172,11 +171,11 @@ const apiDefs = {
   upload_red_packet_voice: {
     wait: true,
     timeout: 5 * 60 * 1000,
-    build: (self_id, platform, sender_uin, red_packet, file_path) => ({
-      ...red_packet,
+    build: (self_id, platform, sender_id, red_packet, file_path) => ({
+      red_packet,
       self_id,
       platform,
-      sender_uin,
+      sender_id,
       file_path,
     }),
   },
@@ -185,17 +184,25 @@ const apiDefs = {
     timeout: 5 * 60 * 1000,
     build: (self_id, platform, group_id, file_path) => ({ self_id, platform, group_id, file_path }),
   },
-  get_summary_card: {
+  get_user_profile: {
     wait: true,
-    build: (self_id, platform, target_uin) => {
+    build: (self_id, platform, user_id) => {
       const p = { self_id, platform }
-      if (target_uin !== undefined) p.target_uin = target_uin
+      if (user_id !== undefined) p.user_id = user_id
       return p
     },
   },
-  like_summary_card: {
+  like_user_profile: {
     wait: true,
-    build: (self_id, platform, target_uin, like_count = 1) => ({ self_id, platform, target_uin, like_count }),
+    build: (self_id, platform, user_id, like_count = 1) => ({ self_id, platform, user_id, like_count }),
+  },
+  get_sent_profile_likes: {
+    wait: true,
+    build: (self_id, platform, page_size = 30, next_mid = '0') => ({ self_id, platform, page_size, next_mid }),
+  },
+  get_received_profile_likes: {
+    wait: true,
+    build: (self_id, platform, page_size = 30, next_mid = '0') => ({ self_id, platform, page_size, next_mid }),
   },
   get_bot_list: {
     wait: true,
@@ -205,7 +212,7 @@ const apiDefs = {
     wait: true,
     build: (self_id, platform) => ({ self_id, platform }),
   },
-  get_protocol_list: {
+  get_client_profile_list: {
     wait: true,
     build: () => ({}),
   },
@@ -217,13 +224,13 @@ const apiDefs = {
     wait: true,
     resultMessage: '账号添加成功',
     resultData: false,
-    build: (self_id, platform, password, protocol_id, device_profile_id) => ({ self_id, platform, password, protocol_id, device_profile_id }),
+    build: (self_id, platform, password, client_profile_id, device_profile_id) => ({ self_id, platform, password, client_profile_id, device_profile_id }),
   },
   update_account: {
     wait: true,
     resultMessage: '账号编辑成功',
     resultData: false,
-    build: (self_id, platform, password, protocol_id, device_profile_id) => ({ self_id, platform, password, protocol_id, device_profile_id }),
+    build: (self_id, platform, password, client_profile_id, device_profile_id) => ({ self_id, platform, password, client_profile_id, device_profile_id }),
   },
   offline_account: {
     wait: true,
@@ -287,7 +294,7 @@ const apiDefs = {
   },
   get_login_qr: {
     wait: true,
-    build: (self_id, platform, protocol_id, device_profile_id) => ({ self_id, platform, protocol_id, device_profile_id }),
+    build: (self_id, platform, client_profile_id, device_profile_id) => ({ self_id, platform, client_profile_id, device_profile_id }),
   },
   query_login_qr: {
     wait: true,
@@ -303,15 +310,15 @@ const apiDefs = {
   },
   set_group_admin: {
     wait: true,
-    build: (self_id, platform, group_id, target_uin, set_admin) => ({ self_id, platform, group_id, target_uin, set_admin }),
+    build: (self_id, platform, group_id, user_id, set_admin) => ({ self_id, platform, group_id, user_id, set_admin }),
   },
-  group_sign: {
+  sign_group: {
     wait: true,
     build: (self_id, platform, group_id) => ({ self_id, platform, group_id }),
   },
   set_group_mute: {
     wait: true,
-    build: (self_id, platform, group_id, target_uin, duration_sec) => ({ self_id, platform, group_id, target_uin, duration_sec }),
+    build: (self_id, platform, group_id, user_id, duration_sec) => ({ self_id, platform, group_id, user_id, duration_sec }),
   },
   set_group_mute_all: {
     wait: true,
@@ -331,15 +338,15 @@ const apiDefs = {
   },
   get_group_forward_msg: {
     wait: true,
-    build: (self_id, platform, sender_uin, res_id) => ({ self_id, platform, sender_uin, res_id }),
+    build: (self_id, platform, sender_id, res_id) => ({ self_id, platform, sender_id, res_id }),
   },
-  send_group_forward_msg: {
+  upload_group_forward_msg: {
     wait: true,
     build: (self_id, platform, group_id, messages) => ({ self_id, platform, group_id, messages }),
   },
   delete_friend: {
     wait: true,
-    build: (self_id, platform, target_uin) => ({ self_id, platform, target_uin }),
+    build: (self_id, platform, user_id) => ({ self_id, platform, user_id }),
   },
   get_level_tasks: {
     wait: true,
@@ -381,8 +388,12 @@ export function createAPI(config) {
   let connected = false
 
   function _send(obj) {
+    const payload = JSON.stringify(obj)
+    if (obj.type === 'action' && Buffer.byteLength(payload, 'utf8') > 4 * 1024 * 1024) {
+      throw new Error('API 请求超过 4 MiB，请改用后端可访问的文件地址')
+    }
     if (!ws || ws.readyState !== WebSocket.OPEN) return
-    ws.send(JSON.stringify(obj))
+    ws.send(payload)
   }
 
   function call(action, params, resultMessage = '', resultData = true, timeoutMs = 30000) {
@@ -395,7 +406,14 @@ export function createAPI(config) {
         else reject(new Error(error))
       }, timeoutMs)
       pending.set(id, { resolve, reject, timer, resultMessage, resultData })
-      _send({ type: 'action', id, action, params })
+      try {
+        _send({ type: 'action', id, action, params })
+      } catch (error) {
+        clearTimeout(timer)
+        pending.delete(id)
+        if (resultMessage) resolve({ code: 1, msg: error.message })
+        else reject(error)
+      }
     })
   }
 

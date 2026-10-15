@@ -1,10 +1,14 @@
 import { createReverseAPI } from './sdk.js'
 
+if (!process.env.MENGKA_SERVICE_TOKEN) {
+  throw new Error('请设置 MENGKA_SERVICE_TOKEN 环境变量')
+}
+
 const api = createReverseAPI({
   host: '0.0.0.0',
   port: 3002,
   path: '/',
-  token: '在管理后台填写相同的服务令牌',
+  token: process.env.MENGKA_SERVICE_TOKEN,
 })
 
 api.on('group_message', event => {
