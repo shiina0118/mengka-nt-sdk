@@ -115,6 +115,8 @@ const apiDefs = {
   grab_red_packet: {
     wait: true,
     timeout: 60 * 1000,
+    // Ordinary packets require a token; when omitted, the backend fetches it before claiming.
+    // Text command packets use their outgoing message identifiers instead.
     build: (self_id, platform, group_id, sender_id, red_packet, claim_token) => {
       const params = {
         red_packet,

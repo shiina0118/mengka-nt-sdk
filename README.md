@@ -172,4 +172,4 @@ if (sent.next_mid !== '-1') {
 
 合并转发使用 `upload_group_forward_msg` 上传内容，再将结果中的 `message` 交给 `send_group_msg` 发送；群打卡使用 `sign_group`。凭据接口为 `get_client_key`、`get_ps_key`，分别返回 `client_key`、`ps_key`。
 
-红包请求保留嵌套 `red_packet` 对象，领取凭据参数为 `claim_token`。群邀请的消息序号参数为 `msg_seq`，群 @ 消息段使用 `{ type: 'at', data: { user_id: 123456789 } }`，@ 全体使用 `user_id: 'all'`。
+红包请求保留嵌套 `red_packet` 对象。普通红包领取前必须取得 `claim_token`：可先调用 `get_red_packet_info`，再将返回的 token 作为 `grab_red_packet` 的第 6 个参数传入；省略时后端会自动预查询，拿不到有效 token 就报错，不会继续领取。文字口令红包不使用该参数。群邀请的消息序号参数为 `msg_seq`，群 @ 消息段使用 `{ type: 'at', data: { user_id: 123456789 } }`，@ 全体使用 `user_id: 'all'`。
